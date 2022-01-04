@@ -1,38 +1,82 @@
-.App {
-  text-align: center;
+/* ------------------------
+Fonts
+------------------------ */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+/* ------------------------
+Variables
+------------------------ */
+:root {
+  --dark-violet: rgba(142, 68, 173, 1.0);
+  --light-violet: rgba(155, 89, 182, 0.8);
+  --yellow: rgba(241, 196, 15, 0.8);
+  --silver: rgba(189, 195, 199, 1.0);
+  --white: rgba(255, 255, 255, 1.0);
 }
-
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+/* ------------------------
+Global Settings
+------------------------ */
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+  outline: none;
 }
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+::before,
+::after {
+  box-sizing: border-box;
 }
-
-.App-header {
-  background-color: #282c34;
+body {
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  font-weight: 300;
+  font-size: 1rem;
+  font-family: 'Poppins', sans-serif;
+}
+.cx-navbar {
+  background: var(--dark-violet);
+  width: 100%;
+  height: 50px;
+}
+/* ------------------------
+Custom Placeholder
+------------------------ */
+.cx-placeholder {
+  width: 100%;
+  height: 500px;
+  background: var(--silver);
 }
 
-.App-link {
-  color: #61dafb;
+/* ------------------------
+Custom Styling
+------------------------ */
+.cx-navbar-title {
+  font-weight: 600;
+  font-size: 1.5rem;
+  color: var(--white);
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.cx-pool {
+  text-align: center;
+  letter-spacing: 2px;
+}
+
+.cx-pool-prize {
+  font-weight: 800;
+  font-size: 4.5rem;
+  color: var(--light-violet);
+}
+
+.cx-pool-text {
+  text-transform: capitalize;
+  font-weight: 600;
+  font-size: 3.5rem;
+  color: var(--yellow);
+}
+
+.cx-body {
+  width: 100%;
+}
+
+.cx-content {
+  flex: 1 100 30%;
+  margin: 0 15px;
 }
