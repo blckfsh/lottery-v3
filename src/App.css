@@ -37,12 +37,19 @@ body {
   height: 50px;
 }
 /* ------------------------
-Custom Placeholder
+Custom Placeholders
 ------------------------ */
 .cx-placeholder {
   width: 100%;
   height: 500px;
   background: var(--silver);
+}
+
+.cx-wheel {
+  background: var(--dark-violet);
+  height: 400px;
+  width: 400px;
+  border-radius: 100%;
 }
 
 /* ------------------------
@@ -79,4 +86,8 @@ Custom Styling
 .cx-content {
   flex: 1 100 30%;
   margin: 0 15px;
+}
+
+.cx-wheel-text {
+  font-weight: 600;
 }

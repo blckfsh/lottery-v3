@@ -1,7 +1,13 @@
+import { useContext } from 'react'
+import { ContractContext } from '../../containers/main'
+
 function Pool() {
+
+  const { pool } = useContext(ContractContext)
+
   return (
     <div className="cx-pool">
-      <p className="cx-pool-prize">8,000,000.00 SLP</p>
+      <p className="cx-pool-prize">{pool} SLP</p>
       <small className="cx-pool-text">jackpot prize</small>
     </div>
   )

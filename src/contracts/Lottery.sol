@@ -22,6 +22,12 @@ contract Lottery {
     _;
   }
 
+  function getPlayers() public {
+    for (uint count = 0; count < players.length; count++) {
+      players[count];
+    }
+  }
+
   function acceptToken(uint amount) external {
 
     address from = msg.sender;

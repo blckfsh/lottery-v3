@@ -1,6 +1,19 @@
+import { useContext } from 'react'
+import { ContractContext } from '../../containers/main'
+
 function Wheel() {
+
+  const { lotteryAddress } = useContext(ContractContext)
+
   return (
-    <h1>Wheel</h1>
+    <>
+      <div className="cx-wheel">
+
+      </div>
+      <div>
+        <p className="cx-wheel-text text-center">Address: {lotteryAddress}</p>
+      </div>
+    </>
   )
 }
 
