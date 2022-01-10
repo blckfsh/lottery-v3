@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import Web3 from 'web3'
+import moment from 'moment'
 
 import SampleToken from '../abis/SampleToken.json'
 import Lottery from '../abis/Lottery.json'
@@ -43,34 +44,32 @@ function Main() {
     }
   }
 
-
   const loadBlockchainData = async () => {
-    const web3 = window.web3
-    const accounts = await web3.eth.getAccounts()
+    const web3 = window.web3 // initialize web3js
+    const accounts = await web3.eth.getAccounts() // get default account
+
+    // set default account
     setAccount(accounts[0])
     console.log("current account: " + accounts)
 
-    const ethBalance = web3.eth.getBalance(accounts[0])
-
-    // Load Token
+    // START: Load Token Smart Contract
     const networkId = await web3.eth.net.getId()
     const tokenData = SampleToken.networks[networkId]
 
     if (tokenData) {
       const token = new web3.eth.Contract(SampleToken.abi, tokenData.address)
       setSampleToken(token)
-      console.log("token: " + tokenData.address)
+      console.log("token address: " + tokenData.address)
 
       let tokenBalances = await token.methods.balanceOf(accounts[0]).call()
       setTokenBalance(tokenBalances)
-      console.log("balance: " + tokenBalances)
-      console.log(await token.methods)
-
+      console.log("balance: " + web3.utils.fromWei(tokenBalances, 'Ether'))
     } else {
       window.alert('Token contract not deployed to detected network')
     }
+    // END: Load Token Smart Contract
 
-    // Load Lottery
+    // START: Load Lottery Smart Contract
     const tableArray = []
     const lotteryData = Lottery.networks[networkId]
     setLotteryAddress(lotteryData.address)
@@ -90,6 +89,7 @@ function Main() {
         let { id, date, wallet_address, amount, entry, status } = players
         for (let count = 0; count < players.length; count++) {
           let player = await lottery.methods.getPlayerByAddress(players[count]).call()
+
           tableArray.push({
             id: player[0],
             date: player[1],
@@ -98,52 +98,41 @@ function Main() {
             entry: web3.utils.fromWei(player[4], 'Ether'),
             status: player[5]
           })
-          console.log(tableArray)
-          setTable(tableArray)
         }
+        setTable(tableArray)
         setTableError(false)
 
       } else {
         setTableError(true)
       }
-
-
-
     } else {
       window.alert('Lottery contract not deployed to detected network')
     }
+    // END: Load Lottery Smart Contract
   }
 
   const acceptToken = async () => {
-    let id = '10000013'
-    let date = '01/06/2022'
-    let amount = '10000000000000000000'
-    let entry = '10000000000000000000'
-    let success = 'success'
-    // console.log(account)
     const web3 = window.web3
     const networkId = await web3.eth.net.getId()
     const lotteryData = Lottery.networks[networkId]
-    // console.log(lotteryData.address)
-    await sampleToken.methods.approve(lotteryData.address, '10000000000000000000')
-                      .send({ from: account })
-                      // .then(console.log('success'))
-                      // .catch(console.log('error'))
-                      .on('transactionHash', (hash) => {
-                        // console.log("approve hash: " + hash)
-                        // console.log("calling account: " + account)
 
-                        // lottery.methods.acceptToken(id, date, amount, entry, success).call().then(res => console.log("accept: " + res)).catch(err => console.error)
-                        lottery.methods.acceptToken(id, date, amount, entry, success)
+    let date = moment().format('l')
+    let amount = '10000000000000000000'
+    let entry = web3.utils.fromWei(amount, 'Ether')
+    let success = 'success'
+    console.log(entry)
+
+    await sampleToken.methods.approve(lotteryData.address, amount)
+                      .send({ from: account })
+                      .on('transactionHash', (hash) => {
+                        lottery.methods.acceptToken(date, amount, entry, success)
                                     .send({ from: account, gas: '300000', gasPrice: web3.utils.toHex(2 * 1e9), gasLimit: web3.utils.toHex(210000) })
                                     .on('transactionHash', (hash) => {
                                       console.log("accept hash: " + hash)
+                                      window.location.reload()
                                     })
                                     .catch(err => console.log(err.message))
                       })
-                      // await sampleToken.methods.allowance(account, lotteryData.address).call().then(res => console.log(res))
-                      // lottery.methods.acceptToken(id, date, amount, entry, success).send({ from: account, gas: 4700000, gasPrice: 20000000000, }).call().then(res => console.log("accept: " + res)).catch(err => console.error)
-
   }
 
   return (

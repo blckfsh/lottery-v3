@@ -4,7 +4,6 @@ import { ContractContext } from '../../containers/main'
 function Table() {
 
   const { table } = useContext(ContractContext)
-  console.log(JSON.stringify(table))
 
   return (
     <div className="cx-table">
@@ -21,10 +20,10 @@ function Table() {
         </thead>
         <tbody>
           {
-            table.map((player) => {
+            table.map((player, index) => {
               let { id, date, wallet_address, amount, entry, status } = player
               return (
-                <tr>
+                <tr key={index}>
                   <td>{id}</td>
                   <td>{date}</td>
                   <td>{wallet_address}</td>

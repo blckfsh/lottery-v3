@@ -50,7 +50,7 @@ contract('Lottery', ([deployer, investor]) => {
       await token.approve(lottery.address, '20', {from: accounts[1]})
 
       // Transfer tokens from account address to lottery address
-      result = await lottery.acceptToken('1', '01/09/22', '20', '20', 'success', {from: accounts[1]})
+      result = await lottery.acceptToken('01/09/22', '20', '20', 'success', {from: accounts[1]})
     })
 
     it('Allows players to bet token to lottery', async () => {
@@ -87,7 +87,7 @@ contract('Lottery', ([deployer, investor]) => {
 		it('Allows to fetch the players pool', async () => {
 			// Check if we are fetching the correct addresses
 			const event = result
-			assert.equal(event, accounts[1])
+			assert.equal(event[0], accounts[1])
 		})
 	})
 

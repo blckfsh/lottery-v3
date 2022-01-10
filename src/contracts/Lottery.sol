@@ -20,6 +20,7 @@ contract Lottery {
   mapping (address => Player) players;
 
   // List of players registered in lottery
+  uint public playerId;
   address[] public playerAccounts;
   address public owner;
 
@@ -62,7 +63,9 @@ contract Lottery {
     players[_from].status = _status;
 
     // pushing the account conducting the transaction onto the players array as a payable address
-    playerAccounts.push(_from);
+    for (uint count; count < _entry; count++) {
+      playerAccounts.push(_from);
+    }
 
     emit Transfer(_from, _to, _amount);
   }
