@@ -91,3 +91,7 @@ Custom Styling
 .cx-wheel-text {
   font-weight: 600;
 }
+
+.cx-table {
+  width: 100%;
+}

@@ -34,7 +34,7 @@ contract Lottery {
   }
 
   function getPlayers() public view returns (address[] memory) {
-    return players;
+    return playerAccounts;
   }
 
   function getPlayerByAddress(address _address) view public returns (uint, string memory, address, uint, uint, string memory) {
@@ -77,17 +77,17 @@ contract Lottery {
   }
 
   function random() internal view returns(uint) {
-    return uint(keccak256(abi.encodePacked(block.difficulty, block.timestamp, players.length)));
+    return uint(keccak256(abi.encodePacked(block.difficulty, block.timestamp, playerAccounts.length)));
   }
 
   function pickWinner() public onlyOwner {
     // makes sure that we have enough players in the lottery
     // require(players.length >= 3, "Not enough players in the lottery");
 
-    address payable _winner;
+    address _winner;
 
     // selects the winner with the random number
-    _winner = players[random() % players.length];
+    _winner = playerAccounts[random() % playerAccounts.length];
     uint _prize = (getTokenBalanceOf(address(this)) * 70) / 100;
     uint _burn_token = (getTokenBalanceOf(address(this)) * 30) / 100;
 
@@ -102,7 +102,7 @@ contract Lottery {
   }
 
   function resetLottery() internal {
-    players = new address[](0);
+    playerAccounts = new address[](0);
   }
 
 }

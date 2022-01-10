@@ -22,7 +22,7 @@ function Main() {
   const [lottery, setLottery] = useState('')
   const [lotteryAddress, setLotteryAddress] = useState('')
   const [pool, setPool] = useState('')
-  const [table, setTable] = useState([])
+  const [table, setTable] = useState({})
   const [tableError, setTableError] = useState(false)
 
   useEffect(async () => {
@@ -71,7 +71,6 @@ function Main() {
     }
 
     // Load Lottery
-    const tableArray = []
     const lotteryData = Lottery.networks[networkId]
     setLotteryAddress(lotteryData.address)
 
@@ -81,28 +80,21 @@ function Main() {
 
       // Get Lottery Pool
       let lotteryPool = await lottery.methods.getTokenBalanceOf(lotteryData.address).call()
-      setPool(web3.utils.fromWei(lotteryPool, 'Ether'))
-      console.log(`pool: ${web3.utils.fromWei(lotteryPool, 'Ether')}`)
+      setPool(lotteryPool)
 
       // Get Players
       let players = await lottery.methods.getPlayers().call()
       if (players.length > 0) {
         let { id, date, wallet_address, amount, entry, status } = players
-        for (let count = 0; count < players.length; count++) {
-          let player = await lottery.methods.getPlayerByAddress(players[count]).call()
-          tableArray.push({
-            id: player[0],
-            date: player[1],
-            wallet_address: player[2],
-            amount: web3.utils.fromWei(player[3], 'Ether'),
-            entry: web3.utils.fromWei(player[4], 'Ether'),
-            status: player[5]
-          })
-          console.log(tableArray)
-          setTable(tableArray)
-        }
         setTableError(false)
-
+        setTable({
+          id,
+          date,
+          wallet_address,
+          amount,
+          entry,
+          status
+        })
       } else {
         setTableError(true)
       }
