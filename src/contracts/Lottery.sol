@@ -9,7 +9,7 @@ contract Lottery {
   event Transfer(address _from, address _destAddr, uint _amount);
 
   struct Player {
-    uint id;
+    string id;
     string date;
     address wallet_address;
     uint amount;
@@ -17,11 +17,13 @@ contract Lottery {
     string status;
   }
 
-  mapping (address => Player) players;
+  /* mapping (address => Player) players; */
+  mapping (string => Player) players;
 
   // List of players registered in lottery
   uint public playerId;
   address[] public playerAccounts;
+  address[] public playerEntry;
   address public owner;
 
   constructor(IERC20 _token) public {
@@ -38,11 +40,15 @@ contract Lottery {
     return playerAccounts;
   }
 
-  function getPlayerByAddress(address _address) view public returns (uint, string memory, address, uint, uint, string memory) {
+  function getPlayerByAddress(string memory _address) view public returns (string memory, string memory, address, uint, uint, string memory) {
      return (players[_address].id, players[_address].date, players[_address].wallet_address, players[_address].amount, players[_address].entry, players[_address].status);
   }
 
-  function acceptToken(uint _id, string memory _date, uint _amount, uint _entry, string memory _status) external {
+  /* function getPlayerByAddress(address _address) view public returns (string memory, string memory, address, uint, uint, string memory) {
+     return (players[_address].id, players[_address].date, players[_address].wallet_address, players[_address].amount, players[_address].entry, players[_address].status);
+  } */
+
+  function acceptToken(string memory _id, string memory _date, uint _amount, uint _entry, string memory _status) external {
 
     address _from = msg.sender;
     address _to = address(this);
@@ -55,16 +61,17 @@ contract Lottery {
     token.transferFrom(_from, _to, _amount);
 
     // sending participant details on array
-    players[_from].id = _id;
-    players[_from].date = _date;
-    players[_from].wallet_address = _from;
-    players[_from].amount = _amount;
-    players[_from].entry = _entry;
-    players[_from].status = _status;
+    players[_id].id = _id;
+    players[_id].date = _date;
+    players[_id].wallet_address = _from;
+    players[_id].amount = _amount;
+    players[_id].entry = _entry;
+    players[_id].status = _status;
 
     // pushing the account conducting the transaction onto the players array as a payable address
+    playerAccounts.push(_from);
     for (uint count; count < _entry; count++) {
-      playerAccounts.push(_from);
+      playerEntry.push(_from);
     }
 
     emit Transfer(_from, _to, _amount);
@@ -106,6 +113,7 @@ contract Lottery {
 
   function resetLottery() internal {
     playerAccounts = new address[](0);
+    playerEntry = new address[](0);
   }
 
 }

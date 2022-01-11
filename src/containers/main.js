@@ -32,6 +32,12 @@ function Main() {
     loadBlockchainData()
   }, [])
 
+  const addingPad = (num, size) => {
+    let s = num+""
+    while (s.length < size) s = '0' + s
+    return s
+  }
+
   const loadWeb3 = async () => {
     if (window.ethereum) {
       window.web3 = new Web3(window.ethereum)
@@ -90,20 +96,11 @@ function Main() {
       let players = await lottery.methods.getPlayers().call()
       if (players.length > 0) {
 
-        // check if the id was already displayed on the table
-        for (let count = 0; count < players.length; count++) {
-          let player = await lottery.methods.getPlayerByAddress(players[count]).call()
-          let found = checkLastIdArray.find(plyr => plyr === player[0])
-          if (found !== player[0]) {
-              checkLastIdArray.push(player[0])
-              playerAddress.push(player[2])
-          }
-        }
-        setTotalPlayers(checkLastIdArray.length)
+        console.log(players)
 
         // display the data on table
-        for (let count = 0; count < checkLastIdArray.length; count++) {
-          let player = await lottery.methods.getPlayerByAddress(playerAddress[count]).call()
+        for (let count = 0; count < players.length; count++) {
+          let player = await lottery.methods.getPlayerByAddress(players[count]).call()
 
           tableArray.push({
             id: player[0],
@@ -113,8 +110,8 @@ function Main() {
             entry: player[4],
             status: player[5]
           })
-
         }
+        console.log(tableArray)
         setTable(tableArray)
         setTableError(false)
 
@@ -125,12 +122,6 @@ function Main() {
       window.alert('Lottery contract not deployed to detected network')
     }
     // END: Load Lottery Smart Contract
-  }
-
-  const addingPad = (num, size) => {
-    let s = num+""
-    while (s.length < size) s = '0' + s
-    return s
   }
 
   const acceptToken = async () => {
@@ -148,8 +139,10 @@ function Main() {
 
     // setup id
     let getTotalPlayes = await lottery.methods.getPlayers().call()
-    newValue = fixedValue + (parseInt(totalPlayers) + 1)
+    newValue = fixedValue + (parseInt(getTotalPlayes.length) + 1)
     id = addingPad(newValue, 7)
+    console.log(totalPlayers)
+    console.log(id)
 
     await sampleToken.methods.approve(lotteryData.address, amount)
                       .send({ from: account })
