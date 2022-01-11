@@ -25,6 +25,7 @@ function Main() {
   const [pool, setPool] = useState('')
   const [table, setTable] = useState([])
   const [tableError, setTableError] = useState(false)
+  const [totalPlayers, setTotalPlayers] = useState(0)
 
   useEffect(async () => {
     loadWeb3()
@@ -71,6 +72,8 @@ function Main() {
 
     // START: Load Lottery Smart Contract
     const tableArray = []
+    const checkLastIdArray = []
+    const playerAddress = []
     const lotteryData = Lottery.networks[networkId]
     setLotteryAddress(lotteryData.address)
 
@@ -86,18 +89,31 @@ function Main() {
       // Get Players
       let players = await lottery.methods.getPlayers().call()
       if (players.length > 0) {
-        let { id, date, wallet_address, amount, entry, status } = players
+
+        // check if the id was already displayed on the table
         for (let count = 0; count < players.length; count++) {
           let player = await lottery.methods.getPlayerByAddress(players[count]).call()
+          let found = checkLastIdArray.find(plyr => plyr === player[0])
+          if (found !== player[0]) {
+              checkLastIdArray.push(player[0])
+              playerAddress.push(player[2])
+          }
+        }
+        setTotalPlayers(checkLastIdArray.length)
+
+        // display the data on table
+        for (let count = 0; count < checkLastIdArray.length; count++) {
+          let player = await lottery.methods.getPlayerByAddress(playerAddress[count]).call()
 
           tableArray.push({
             id: player[0],
             date: player[1],
             wallet_address: player[2],
             amount: web3.utils.fromWei(player[3], 'Ether'),
-            entry: web3.utils.fromWei(player[4], 'Ether'),
+            entry: player[4],
             status: player[5]
           })
+
         }
         setTable(tableArray)
         setTableError(false)
@@ -111,22 +127,35 @@ function Main() {
     // END: Load Lottery Smart Contract
   }
 
+  const addingPad = (num, size) => {
+    let s = num+""
+    while (s.length < size) s = '0' + s
+    return s
+  }
+
   const acceptToken = async () => {
     const web3 = window.web3
     const networkId = await web3.eth.net.getId()
     const lotteryData = Lottery.networks[networkId]
 
+    let fixedValue = 10010
+    let newValue
+    let id
     let date = moment().format('l')
     let amount = '10000000000000000000'
     let entry = web3.utils.fromWei(amount, 'Ether')
     let success = 'success'
-    console.log(entry)
+
+    // setup id
+    let getTotalPlayes = await lottery.methods.getPlayers().call()
+    newValue = fixedValue + (parseInt(totalPlayers) + 1)
+    id = addingPad(newValue, 7)
 
     await sampleToken.methods.approve(lotteryData.address, amount)
                       .send({ from: account })
                       .on('transactionHash', (hash) => {
-                        lottery.methods.acceptToken(date, amount, entry, success)
-                                    .send({ from: account, gas: '300000', gasPrice: web3.utils.toHex(2 * 1e9), gasLimit: web3.utils.toHex(210000) })
+                        lottery.methods.acceptToken(id, date, amount, entry, success)
+                                    .send({ from: account, gas: '600000', gasPrice: web3.utils.toHex(2 * 1e9), gasLimit: web3.utils.toHex(210000) })
                                     .on('transactionHash', (hash) => {
                                       console.log("accept hash: " + hash)
                                       window.location.reload()
