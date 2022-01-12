@@ -94,4 +94,10 @@ Custom Styling
 
 .cx-table {
   width: 100%;
+  margin: 0 15px;
+}
+
+.cx-cta {
+  margin-top: auto;
+  margin-bottom: auto;
 }

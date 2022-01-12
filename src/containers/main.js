@@ -26,6 +26,7 @@ function Main() {
   const [table, setTable] = useState([])
   const [tableError, setTableError] = useState(false)
   const [totalPlayers, setTotalPlayers] = useState(0)
+  const [amount, setAmount] = useState(0)
 
   useEffect(async () => {
     loadWeb3()
@@ -133,8 +134,9 @@ function Main() {
     let newValue
     let id
     let date = moment().format('l')
-    let amount = '10000000000000000000'
-    let entry = web3.utils.fromWei(amount, 'Ether')
+    let converterValue = 1000000000000000000
+    let convertedAmount = parseInt(amount) * parseInt(converterValue) // 000000000000000000
+    let entry = web3.utils.fromWei(convertedAmount.toString(), 'Ether')
     let success = 'success'
 
     // setup id
@@ -143,11 +145,13 @@ function Main() {
     id = addingPad(newValue, 7)
     console.log(totalPlayers)
     console.log(id)
+    console.log(convertedAmount)
+    console.log(entry)
 
-    await sampleToken.methods.approve(lotteryData.address, amount)
+    await sampleToken.methods.approve(lotteryData.address, convertedAmount.toString())
                       .send({ from: account })
                       .on('transactionHash', (hash) => {
-                        lottery.methods.acceptToken(id, date, amount, entry, success)
+                        lottery.methods.acceptToken(id, date, convertedAmount.toString(), entry, success)
                                     .send({ from: account, gas: '600000', gasPrice: web3.utils.toHex(2 * 1e9), gasLimit: web3.utils.toHex(210000) })
                                     .on('transactionHash', (hash) => {
                                       console.log("accept hash: " + hash)
@@ -176,8 +180,8 @@ function Main() {
             <Wheel />
           </ContractContext.Provider>
         </div>
-        <div className="cx-content d-flex justify-content-center align-items-center">
-          <ContractContext.Provider value={{ acceptToken }}>
+        <div className="cx-content cx-cta">
+          <ContractContext.Provider value={{ acceptToken, amount, setAmount }}>
             <Cta />
           </ContractContext.Provider>
         </div>
