@@ -27,6 +27,7 @@ function Main() {
   const [tableError, setTableError] = useState(false)
   const [totalPlayers, setTotalPlayers] = useState(0)
   const [amount, setAmount] = useState(0)
+  const [gasFee, setGasFee] = useState(0)
 
   useEffect(async () => {
     loadWeb3()
@@ -128,8 +129,13 @@ function Main() {
   const acceptToken = async () => {
     const web3 = window.web3
     const networkId = await web3.eth.net.getId()
-    const lotteryData = Lottery.networks[networkId]
 
+    const lotteryData = Lottery.networks[networkId]
+    // const gasPrice = await web3.eth.estimateGas({
+    //   to: lotteryData.address,
+    //   data: hash
+    // })
+    // console.log(gasPrice)
     let fixedValue = 10010
     let newValue
     let id
@@ -143,21 +149,21 @@ function Main() {
     let getTotalPlayes = await lottery.methods.getPlayers().call()
     newValue = fixedValue + (parseInt(getTotalPlayes.length) + 1)
     id = addingPad(newValue, 7)
-    console.log(totalPlayers)
-    console.log(id)
-    console.log(convertedAmount)
-    console.log(entry)
 
     await sampleToken.methods.approve(lotteryData.address, convertedAmount.toString())
                       .send({ from: account })
                       .on('transactionHash', (hash) => {
                         lottery.methods.acceptToken(id, date, convertedAmount.toString(), entry, success)
-                                    .send({ from: account, gas: '600000', gasPrice: web3.utils.toHex(2 * 1e9), gasLimit: web3.utils.toHex(210000) })
-                                    .on('transactionHash', (hash) => {
-                                      console.log("accept hash: " + hash)
-                                      window.location.reload()
+                                    .estimateGas({ from: account })
+                                    .then(res => {
+                                      lottery.methods.acceptToken(id, date, convertedAmount.toString(), entry, success)
+                                                  .send({ from: account, gas: res.toString(), gasPrice: web3.utils.toHex(2 * 1e9), gasLimit: web3.utils.toHex(210000) })
+                                                  .on('transactionHash', (hash) => {
+                                                    window.location.reload()
+                                                  })
+                                                  .catch(err => console.log(err.message))
                                     })
-                                    .catch(err => console.log(err.message))
+
                       })
   }
 

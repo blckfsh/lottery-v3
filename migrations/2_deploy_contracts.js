@@ -5,15 +5,15 @@ module.exports = async function(deployer) {
 
   // Deploy Token
   await deployer.deploy(SampleToken, "100000000000000000000");
-  const token = await SampleToken.deployed()
+  const token = await SampleToken.deployed();
 
   //Deploy Lottery
   await deployer.deploy(Lottery, SampleToken.address);
 
   // Get Accounts
-  const account_1 = '0xa30c67480915Ba5aBB91F29CBAD52df9eAAFdc1A';
-  const account_2 = '0x0eD4E0E99f6591D7E1A65382ff68627E51DD47ff';
-  const account_3 = '0x65EBbA51bC3c92cc863D2B7aEE0D268627615B7b';
+  const account_1 = '0x61d4D7f3bd606A5835b0f52e12bb90cfD1aaEDd1';
+  const account_2 = '0xBaEC137FfCa314445C34F4Bb9CC4Aa50Be777376';
+  const account_3 = '0x5BE55FC909fb90c1552776F017289ace4213f13A';
 
   // Transfer tokens to accounts
   // await token.transfer(account_1, '50')
