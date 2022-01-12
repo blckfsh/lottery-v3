@@ -26,8 +26,9 @@ function Main() {
   const [table, setTable] = useState([])
   const [tableError, setTableError] = useState(false)
   const [totalPlayers, setTotalPlayers] = useState(0)
-  const [amount, setAmount] = useState(0)
+  const [amount, setAmount] = useState('')
   const [gasFee, setGasFee] = useState(0)
+  const [isAcceptingToken, setIsAcceptingToken] = useState(true)
 
   useEffect(async () => {
     loadWeb3()
@@ -38,6 +39,19 @@ function Main() {
     let s = num+""
     while (s.length < size) s = '0' + s
     return s
+  }
+
+  // Adding validation in token amount
+  const handleChange = (event) => {
+    const re = /^[0-9\b]+$/;
+
+    if (event.target.value !== '' && re.test(event.target.value)) {
+        setIsAcceptingToken(false)
+       setAmount(event.target.value)
+    } else {
+      setIsAcceptingToken(true)
+      setAmount(event.target.value)
+    }
   }
 
   const loadWeb3 = async () => {
@@ -144,22 +158,32 @@ function Main() {
     let getTotalPlayes = await lottery.methods.getPlayers().call()
     newValue = fixedValue + (parseInt(getTotalPlayes.length) + 1)
     id = addingPad(newValue, 7)
+    console.log(convertedAmount)
+    console.log(tokenBalance)
 
-    await sampleToken.methods.approve(lotteryData.address, convertedAmount.toString())
-                      .send({ from: account })
-                      .on('transactionHash', (hash) => {
-                        lottery.methods.acceptToken(id, date, convertedAmount.toString(), entry, success)
-                                    .estimateGas({ from: account })
-                                    .then(res => {
-                                      lottery.methods.acceptToken(id, date, convertedAmount.toString(), entry, success)
-                                                  .send({ from: account, gas: res.toString(), gasPrice: web3.utils.toHex(2 * 1e9), gasLimit: web3.utils.toHex(210000) })
-                                                  .on('transactionHash', (hash) => {
-                                                    window.location.reload()
-                                                  })
-                                                  .catch(err => console.log(err.message))
-                                    })
+    if (amount > 0) {
+      if (convertedAmount <= tokenBalance) {
+        await sampleToken.methods.approve(lotteryData.address, convertedAmount.toString())
+                          .send({ from: account })
+                          .on('transactionHash', (hash) => {
+                            lottery.methods.acceptToken(id, date, convertedAmount.toString(), entry, success)
+                                        .estimateGas({ from: account })
+                                        .then(res => {
+                                          lottery.methods.acceptToken(id, date, convertedAmount.toString(), entry, success)
+                                                      .send({ from: account, gas: res.toString(), gasPrice: web3.utils.toHex(2 * 1e9), gasLimit: web3.utils.toHex(210000) })
+                                                      .on('transactionHash', (hash) => {
+                                                        window.location.reload()
+                                                      })
+                                                      .catch(err => console.log(err.message))
+                                        })
 
-                      })
+                          })
+      } else {
+        window.alert(`You cannot bet more than what you have. Your SLP token balance is ${web3.utils.fromWei(tokenBalance, 'Ether')}`)
+      }
+    } else {
+      window.alert('Bet atleast 1 slp.')
+    }
   }
 
   return (
@@ -182,7 +206,7 @@ function Main() {
           </ContractContext.Provider>
         </div>
         <div className="cx-content cx-cta">
-          <ContractContext.Provider value={{ acceptToken, amount, setAmount }}>
+          <ContractContext.Provider value={{ acceptToken, amount, handleChange, isAcceptingToken }}>
             <Cta />
           </ContractContext.Provider>
         </div>
