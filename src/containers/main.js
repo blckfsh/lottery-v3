@@ -100,7 +100,7 @@ function Main() {
 
         // display the data on table
         for (let count = 0; count < players.length; count++) {
-          let player = await lottery.methods.getPlayerByAddress(players[count]).call()
+          let player = await lottery.methods.getPlayerById(players[count]).call()
 
           tableArray.push({
             id: player[0],

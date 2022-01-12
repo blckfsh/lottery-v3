@@ -22,7 +22,7 @@ contract Lottery {
 
   // List of players registered in lottery
   uint public playerId;
-  address[] public playerAccounts;
+  string[] public playerIds;
   address[] public playerEntry;
   address public owner;
 
@@ -36,12 +36,12 @@ contract Lottery {
     _;
   }
 
-  function getPlayers() public view returns (address[] memory) {
-    return playerAccounts;
+  function getPlayers() public view returns (string[] memory) {
+    return playerIds;
   }
 
-  function getPlayerByAddress(string memory _address) view public returns (string memory, string memory, address, uint, uint, string memory) {
-     return (players[_address].id, players[_address].date, players[_address].wallet_address, players[_address].amount, players[_address].entry, players[_address].status);
+  function getPlayerById(string memory _id) view public returns (string memory, string memory, address, uint, uint, string memory) {
+     return (players[_id].id, players[_id].date, players[_id].wallet_address, players[_id].amount, players[_id].entry, players[_id].status);
   }
 
   /* function getPlayerByAddress(address _address) view public returns (string memory, string memory, address, uint, uint, string memory) {
@@ -69,7 +69,7 @@ contract Lottery {
     players[_id].status = _status;
 
     // pushing the account conducting the transaction onto the players array as a payable address
-    playerAccounts.push(_from);
+    playerIds.push(_id);
     for (uint count; count < _entry; count++) {
       playerEntry.push(_from);
     }
@@ -87,7 +87,7 @@ contract Lottery {
   }
 
   function random() internal view returns(uint) {
-    return uint(keccak256(abi.encodePacked(block.difficulty, block.timestamp, playerAccounts.length)));
+    return uint(keccak256(abi.encodePacked(block.difficulty, block.timestamp, playerIds.length)));
   }
 
   function pickWinner() public onlyOwner {
@@ -97,7 +97,7 @@ contract Lottery {
     address _winner;
 
     // selects the winner with the random number
-    _winner = playerAccounts[random() % playerAccounts.length];
+    _winner = playerEntry[random() % playerEntry.length];
     uint _prize = (getTokenBalanceOf(address(this)) * 70) / 100;
     uint _burn_token = (getTokenBalanceOf(address(this)) * 30) / 100;
 
@@ -112,7 +112,7 @@ contract Lottery {
   }
 
   function resetLottery() internal {
-    playerAccounts = new address[](0);
+    playerIds = new string[](0);
     playerEntry = new address[](0);
   }
 

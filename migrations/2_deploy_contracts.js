@@ -11,9 +11,9 @@ module.exports = async function(deployer) {
   await deployer.deploy(Lottery, SampleToken.address);
 
   // Get Accounts
-  const account_1 = '0x43778985b4a7aAaA8CF4C41F45505F13f88c15a6';
-  const account_2 = '0x9B857Bd97902D6f4C5523aa51aC93b5c5C899cAA';
-  const account_3 = '0x1178d87119Ed795041d18d67617680Fb1A8b14b7';
+  const account_1 = '0xa30c67480915Ba5aBB91F29CBAD52df9eAAFdc1A';
+  const account_2 = '0x0eD4E0E99f6591D7E1A65382ff68627E51DD47ff';
+  const account_3 = '0x65EBbA51bC3c92cc863D2B7aEE0D268627615B7b';
 
   // Transfer tokens to accounts
   // await token.transfer(account_1, '50')
