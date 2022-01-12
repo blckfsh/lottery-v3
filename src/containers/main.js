@@ -130,7 +130,7 @@ function Main() {
     const web3 = window.web3
     const networkId = await web3.eth.net.getId()
     const lotteryData = Lottery.networks[networkId]
-  
+
     let fixedValue = 10010
     let newValue
     let id
