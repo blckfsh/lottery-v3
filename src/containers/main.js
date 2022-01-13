@@ -18,6 +18,7 @@ export const ContractContext = React.createContext()
 function Main() {
 
   const [account, setAccount] = useState('')
+  const [owner, setOwner] = useState('')
   const [sampleToken, setSampleToken] = useState('')
   const [tokenBalance, setTokenBalance] = useState('')
   const [lottery, setLottery] = useState('')
@@ -107,6 +108,11 @@ function Main() {
       let lotteryPool = await lottery.methods.getTokenBalanceOf(lotteryData.address).call()
       setPool(web3.utils.fromWei(lotteryPool, 'Ether'))
       console.log(`pool: ${web3.utils.fromWei(lotteryPool, 'Ether')}`)
+
+      let lotteryOwner = await lottery.methods.owner().call()
+      setOwner(lotteryOwner)
+      console.log("owner: " + lotteryOwner)
+      // console.log(await lottery.methods)
 
       // Get Players
       let players = await lottery.methods.getPlayers().call()

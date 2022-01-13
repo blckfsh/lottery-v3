@@ -7,7 +7,7 @@ function Wheel() {
 
   return (
     <>
-      <div className="cx-wheel">
+      <div>
 
       </div>
       <div>
