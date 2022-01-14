@@ -46,7 +46,6 @@ Custom Placeholders
 }
 
 .cx-wheel {
-  background: var(--dark-violet);
   height: 400px;
   width: 400px;
   border-radius: 100%;
@@ -100,4 +99,9 @@ Custom Styling
 .cx-cta {
   margin-top: auto;
   margin-bottom: auto;
+  z-index: 2
+}
+
+canvas {
+  width: 700px !important;
 }

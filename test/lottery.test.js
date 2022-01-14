@@ -164,7 +164,7 @@ contract('Lottery', ([deployer, investor]) => {
 
     before( async () => {
       // Choose a winner from the players pool (these are the accounts that participate on the lottery)
-      result = await lottery.pickWinner({from: deployer})
+      result = await lottery.pickWinner(accounts[1], {from: deployer})
     })
 
     it('Allows owner to pick a winner from players pool', async () => {

@@ -30,11 +30,30 @@ function Main() {
   const [amount, setAmount] = useState('')
   const [gasFee, setGasFee] = useState(0)
   const [isAcceptingToken, setIsAcceptingToken] = useState(true)
+  const [segment, setSegment] = useState([])
 
   useEffect(async () => {
     loadWeb3()
     loadBlockchainData()
   }, [])
+
+  // const segments = [
+  //   '0x00000000000000000000000000000',
+  //   '0x00000000000000000000000000000',
+  //   '0x00000000000000000000000000000',
+  //   '0x00000000000000000000000000000'
+  // ]
+
+  const segColors = [
+    '#EE4040',
+    '#F0CF50',
+    '#815CD1',
+    '#3DA5E0',
+    '#34A24F',
+    '#F9AA1F',
+    '#EC3F3F',
+    '#FF9000'
+  ]
 
   const addingPad = (num, size) => {
     let s = num+""
@@ -97,6 +116,7 @@ function Main() {
     const tableArray = []
     const checkLastIdArray = []
     const playerAddress = []
+    const segments = []
     const lotteryData = Lottery.networks[networkId]
     setLotteryAddress(lotteryData.address)
 
@@ -113,6 +133,27 @@ function Main() {
       setOwner(lotteryOwner)
       console.log("owner: " + lotteryOwner)
       // console.log(await lottery.methods)
+
+      // Get Player Entry
+      let playerEntry = await lottery.methods.getPlayerEntries().call()
+      console.log(playerEntry.length)
+
+      if (playerEntry.length > 0) {
+        console.log("this")
+        // segments.splice()
+        for (let count = 0; count < playerEntry.length; count++) {
+          console.log(playerEntry[count])
+          segments.push(playerEntry[count])
+        }
+      } else if (playerEntry.length < 1) {
+        console.log("no")
+        // segments.splice()
+        for (let count = 0; count < 4; count++) {
+            segments.push('0x00000000000000000000000000000')
+        }
+      }
+      setSegment([segments])
+      console.log("this is: " + segments)
 
       // Get Players
       let players = await lottery.methods.getPlayers().call()
@@ -164,8 +205,9 @@ function Main() {
     let getTotalPlayes = await lottery.methods.getPlayers().call()
     newValue = fixedValue + (parseInt(getTotalPlayes.length) + 1)
     id = addingPad(newValue, 7)
-    console.log(convertedAmount)
-    console.log(tokenBalance)
+    console.log("calling this one: " + account)
+    // console.log(convertedAmount)
+    // console.log(tokenBalance)
 
     if (amount > 0) {
       if (convertedAmount <= tokenBalance) {
@@ -178,7 +220,10 @@ function Main() {
                                           lottery.methods.acceptToken(id, date, convertedAmount.toString(), entry, success)
                                                       .send({ from: account, gas: res.toString(), gasPrice: web3.utils.toHex(2 * 1e9), gasLimit: web3.utils.toHex(210000) })
                                                       .on('transactionHash', (hash) => {
-                                                        window.location.reload()
+                                                        // window.location.reload()
+                                                        loadBlockchainData()
+                                                        setAmount('')
+                                                        setIsAcceptingToken(false)
                                                       })
                                                       .catch(err => console.log(err.message))
                                         })
@@ -189,6 +234,25 @@ function Main() {
       }
     } else {
       window.alert('Bet atleast 1 slp.')
+    }
+  }
+
+  const pickWinner = async (winner) => {
+    const web3 = window.web3 // initialize web3js
+    const accounts = await web3.eth.getAccounts() // get default account
+
+    const networkId = await web3.eth.net.getId()
+    const lotteryData = Lottery.networks[networkId]
+    const lottery = new web3.eth.Contract(Lottery.abi, lotteryData.address)
+
+    let lotteryOwner = await lottery.methods.owner().call()
+
+    console.log("calling via winner: " + accounts[0])
+    console.log("calling via winner: " + lotteryOwner)
+    if (accounts[0] !== lotteryOwner) {
+      console.log("You are not the owner")
+    } else {
+      console.log("Good to spin")
     }
   }
 
@@ -207,7 +271,7 @@ function Main() {
           <Chart />
         </div>
         <div className="cx-content d-flex flex-column justify-content-between align-items-center">
-          <ContractContext.Provider value={{ lotteryAddress }}>
+          <ContractContext.Provider value={{ lotteryAddress, segment, segColors, pickWinner, account }}>
             <Wheel />
           </ContractContext.Provider>
         </div>
