@@ -12,6 +12,7 @@ import WheelComponent from '../components/main/wheel'
 import Cta from '../components/main/cta'
 import Table from '../components/main/table'
 import TableNoData from '../components/main/table-nodata'
+import ModalComponent from '../components/main/modal'
 
 export const ContractContext = React.createContext()
 
@@ -31,9 +32,14 @@ function Main() {
   const [gasFee, setGasFee] = useState(0)
   const [isAcceptingToken, setIsAcceptingToken] = useState(true)
 
+  // roulette wheel
   const [segment, setSegment] = useState([])
   const [mustSpin, setMustSpin] = useState(false)
   const [isOwner, setIsOwner] = useState(false)
+
+  // modal
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [wallet_address, setWallet_Address] = useState('')
 
   useEffect(async () => {
     loadWeb3()
@@ -244,6 +250,7 @@ function Main() {
       await lottery.methods.pickWinner(segment[newPrizeNumber].option)
                         .estimateGas({ from: account })
                         .then(res => {
+                          setWallet_Address(segment[newPrizeNumber].option)
                           lottery.methods.pickWinner(segment[newPrizeNumber].option)
                                       .send({ from: account, gas: res.toString(), gasPrice: web3.utils.toHex(2 * 1e9), gasLimit: web3.utils.toHex(210000) })
                                       .on('transactionHash', (hash) => {
@@ -252,12 +259,19 @@ function Main() {
                                       .catch(error => console.error)
                         })
                         .catch(error => console.error)
+    } else {
+      // window.alert('No Prize Pool')
     }
   }
 
   const stopPick = async () => {
     setMustSpin(false)
+    setIsModalOpen(true)
     loadBlockchainData()
+  }
+
+  const closeModal = () => {
+    setIsModalOpen(false)
   }
 
   return (
@@ -294,6 +308,9 @@ function Main() {
           </ContractContext.Provider>
         }
       </div>
+      <ContractContext.Provider value={{ wallet_address, closeModal, isModalOpen }}>
+        <ModalComponent />
+      </ContractContext.Provider>
     </>
   )
 }

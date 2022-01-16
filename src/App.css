@@ -49,7 +49,7 @@ Custom Placeholders
   height: 400px;
   width: 400px;
   border-radius: 100%;
-  z-index: 2;
+  z-index: 0;
 }
 
 /* ------------------------
@@ -119,4 +119,19 @@ canvas {
 .bhdLno {
   max-width: 405px !important;
   z-index: -1 !important;
+}
+
+.cx-modal {
+  z-index: 999;
+}
+
+/* ------------------------
+Overwrites
+------------------------ */
+.modal-dialog {
+  margin: 0 !important;
+}
+
+.modal-content {
+  border: none !important;
 }
