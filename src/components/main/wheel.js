@@ -1,31 +1,32 @@
-import { useContext } from 'react'
+import { useEffect, useContext } from 'react'
 import { ContractContext } from '../../containers/main'
 
 // Import Wheel
-import WheelComponent from 'react-wheel-of-prizes'
-// import 'react-wheel-of-prizes/dist/index.css'
+import { Wheel } from 'react-custom-roulette'
 
-function Wheel() {
+function WheelComponent() {
 
-  const { lotteryAddress, segment, segColors, pickWinner } = useContext(ContractContext)
-  
+  const { lotteryAddress, segment, mustSpin, stopPick, pool, isOwner, pickWinner } = useContext(ContractContext)
+  // console.log(segment)
+
   return (
     <>
-      <div className="cx-wheel">
-        <WheelComponent
-          segments={segment}
-          segColors={segColors}
-          // winningSegment='won 10'
-          onFinished={(winner) => pickWinner(winner)}
-          primaryColor='black'
-          contrastColor='white'
-          buttonText='Spin'
-          isOnlyOnce={true}
-          size={290}
-          upDuration={600}
-          downDuration={1000}
-          fontFamily='Arial'
+      <div className="cx-wheel mb-5">
+        <Wheel
+          mustStartSpinning={mustSpin}
+          prizeNumber={pool}
+          data={segment}
+          backgroundColors={['#2ecc71', '#3498db', '#9b59b6', '#e67e22', '#f1c40f']}
+          textColors={['#ffffff']}
+          fontSize={7}
+          textDistance={55}
+          onStopSpinning={() => {
+            stopPick()
+          }}
         />
+        <div className="cx-wheel-cta d-grid gap-2 mt-3">
+          <button onClick={() => pickWinner()} className={isOwner === true ? "btn btn-block btn-primary visible" : "btn btn-block btn-primary not-visible"}>SPIN</button>
+        </div>
       </div>
       <div>
         <p className="cx-wheel-text text-center">Address: {lotteryAddress}</p>
@@ -34,4 +35,4 @@ function Wheel() {
   )
 }
 
-export default Wheel
+export default WheelComponent

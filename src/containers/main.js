@@ -8,7 +8,7 @@ import Lottery from '../abis/Lottery.json'
 import NavBar from '../components/main/navbar'
 import Pool from '../components/main/pool'
 import Chart from '../components/main/chart'
-import Wheel from '../components/main/wheel'
+import WheelComponent from '../components/main/wheel'
 import Cta from '../components/main/cta'
 import Table from '../components/main/table'
 import TableNoData from '../components/main/table-nodata'
@@ -30,30 +30,16 @@ function Main() {
   const [amount, setAmount] = useState('')
   const [gasFee, setGasFee] = useState(0)
   const [isAcceptingToken, setIsAcceptingToken] = useState(true)
+
   const [segment, setSegment] = useState([])
+  const [mustSpin, setMustSpin] = useState(false)
+  const [isOwner, setIsOwner] = useState(false)
 
   useEffect(async () => {
     loadWeb3()
     loadBlockchainData()
+    visibleSpinCta()
   }, [])
-
-  // const segments = [
-  //   '0x00000000000000000000000000000',
-  //   '0x00000000000000000000000000000',
-  //   '0x00000000000000000000000000000',
-  //   '0x00000000000000000000000000000'
-  // ]
-
-  const segColors = [
-    '#EE4040',
-    '#F0CF50',
-    '#815CD1',
-    '#3DA5E0',
-    '#34A24F',
-    '#F9AA1F',
-    '#EC3F3F',
-    '#FF9000'
-  ]
 
   const addingPad = (num, size) => {
     let s = num+""
@@ -132,34 +118,25 @@ function Main() {
       let lotteryOwner = await lottery.methods.owner().call()
       setOwner(lotteryOwner)
       console.log("owner: " + lotteryOwner)
-      // console.log(await lottery.methods)
 
       // Get Player Entry
       let playerEntry = await lottery.methods.getPlayerEntries().call()
-      console.log(playerEntry.length)
+      // console.log("entry: " + playerEntry)
 
       if (playerEntry.length > 0) {
-        console.log("this")
-        // segments.splice()
         for (let count = 0; count < playerEntry.length; count++) {
-          console.log(playerEntry[count])
-          segments.push(playerEntry[count])
+          segments.push({option: playerEntry[count]})
         }
       } else if (playerEntry.length < 1) {
-        console.log("no")
-        // segments.splice()
         for (let count = 0; count < 4; count++) {
-            segments.push('0x00000000000000000000000000000')
+            segments.push({option: '0x00000000000000000000000000000'})
         }
       }
-      setSegment([segments])
-      console.log("this is: " + segments)
+      setSegment(segments)
 
       // Get Players
       let players = await lottery.methods.getPlayers().call()
       if (players.length > 0) {
-
-        console.log(players)
 
         // display the data on table
         for (let count = 0; count < players.length; count++) {
@@ -174,7 +151,6 @@ function Main() {
             status: player[5]
           })
         }
-        console.log(tableArray)
         setTable(tableArray)
         setTableError(false)
 
@@ -237,7 +213,7 @@ function Main() {
     }
   }
 
-  const pickWinner = async (winner) => {
+  const visibleSpinCta = async () => {
     const web3 = window.web3 // initialize web3js
     const accounts = await web3.eth.getAccounts() // get default account
 
@@ -247,13 +223,41 @@ function Main() {
 
     let lotteryOwner = await lottery.methods.owner().call()
 
-    console.log("calling via winner: " + accounts[0])
-    console.log("calling via winner: " + lotteryOwner)
-    if (accounts[0] !== lotteryOwner) {
-      console.log("You are not the owner")
+    if (accounts[0] === lotteryOwner) {
+      setIsOwner(true)
     } else {
-      console.log("Good to spin")
+      setIsOwner(false)
     }
+  }
+
+  const pickWinner = async () => {
+    setMustSpin(true)
+    const web3 = window.web3 // initialize web3js
+
+    const networkId = await web3.eth.net.getId()
+    const lotteryData = Lottery.networks[networkId]
+    const lottery = new web3.eth.Contract(Lottery.abi, lotteryData.address)
+
+    const newPrizeNumber = Math.floor(Math.random() * segment.length)
+
+    if (pool > 0) {
+      await lottery.methods.pickWinner(segment[newPrizeNumber].option)
+                        .estimateGas({ from: account })
+                        .then(res => {
+                          lottery.methods.pickWinner(segment[newPrizeNumber].option)
+                                      .send({ from: account, gas: res.toString(), gasPrice: web3.utils.toHex(2 * 1e9), gasLimit: web3.utils.toHex(210000) })
+                                      .on('transactionHash', (hash) => {
+                                        console.log("prize picked: " + hash)
+                                      })
+                                      .catch(error => console.error)
+                        })
+                        .catch(error => console.error)
+    }
+  }
+
+  const stopPick = async () => {
+    setMustSpin(false)
+    loadBlockchainData()
   }
 
   return (
@@ -271,8 +275,8 @@ function Main() {
           <Chart />
         </div>
         <div className="cx-content d-flex flex-column justify-content-between align-items-center">
-          <ContractContext.Provider value={{ lotteryAddress, segment, segColors, pickWinner, account }}>
-            <Wheel />
+          <ContractContext.Provider value={{ lotteryAddress, segment, mustSpin, stopPick, pool, isOwner, pickWinner, account }}>
+            <WheelComponent />
           </ContractContext.Provider>
         </div>
         <div className="cx-content cx-cta">

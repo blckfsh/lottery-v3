@@ -49,6 +49,7 @@ Custom Placeholders
   height: 400px;
   width: 400px;
   border-radius: 100%;
+  z-index: 2;
 }
 
 /* ------------------------
@@ -88,6 +89,7 @@ Custom Styling
 }
 
 .cx-wheel-text {
+  margin-top: 80px;
   font-weight: 600;
 }
 
@@ -102,6 +104,19 @@ Custom Styling
   z-index: 2
 }
 
+.visible {
+  visibility: visible;
+}
+
+.not-visible {
+  visibility: hidden;
+}
+
 canvas {
   width: 700px !important;
+}
+
+.bhdLno {
+  max-width: 405px !important;
+  z-index: -1 !important;
 }
