@@ -12,10 +12,10 @@ module.exports = async function(deployer) {
 
   // Get Accounts
   const account_1 = '0x155EB1623879C1aFdcD6189f8DE97590143F1338';
-  const account_2 = '0x53d18100D8BD04715bEEEF779183d8a371c69f90';
-  const account_3 = '0xfC39b91736DEE1B6Bb17CbEbF713253697597Cb9';
-  const account_4 = '0x88158fb54DA47bE10f2984F416000c38EC31494e';
-  const account_5 = '0x8333D93efD6b2d4f1AC4260A7003c16056af9d36';
+  const account_2 = '0x4feEf2c7a9958b334348fA310B5Fe8C2EfC3d495';
+  const account_3 = '0xD19ff444a0E4657Bf5E0BF268840780e5B12eFe6';
+  const account_4 = '0x0E48b095cB9f11bBDF0aa73D1ee21885556E287D';
+  const account_5 = '0x5f47B8E2D9B830616E9472ef926c28De1eC9cd51';
 
   // Transfer tokens to accounts
   // await token.transfer(account_1, '50')
