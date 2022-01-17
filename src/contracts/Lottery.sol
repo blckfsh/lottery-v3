@@ -23,6 +23,7 @@ contract Lottery {
   // List of players registered in lottery
   uint public playerId;
   string[] public playerIds;
+  string[] public allPlayerIds;
   address[] public playerEntry;
   address public owner;
 
@@ -42,6 +43,10 @@ contract Lottery {
 
   function getPlayers() public view returns (string[] memory) {
     return playerIds;
+  }
+
+  function getAllPlayers() public view returns (string[] memory) {
+    return allPlayerIds;
   }
 
   function getPlayerById(string memory _id) view public returns (string memory, string memory, address, uint, uint, string memory) {
@@ -70,6 +75,7 @@ contract Lottery {
 
     // pushing the account conducting the transaction onto the players array as a payable address
     playerIds.push(_id);
+    allPlayerIds.push(_id);
     for (uint count; count < _entry; count++) {
       playerEntry.push(_from);
     }
@@ -77,8 +83,8 @@ contract Lottery {
     emit Transfer(_from, _to, _amount);
   }
 
-  function getTokenBalanceOf(address addr) public view returns (uint) {
-    return token.balanceOf(addr);
+  function getTokenBalanceOf(address _addr) public view returns (uint) {
+    return token.balanceOf(_addr);
   }
 
   function getBalance() public view onlyOwner returns(uint) {
@@ -90,20 +96,24 @@ contract Lottery {
     return uint(keccak256(abi.encodePacked(block.difficulty, block.timestamp, playerIds.length)));
   }
 
-  function pickWinner(address _winner) public onlyOwner {
+  function pickWinner(address _winner, uint _prize, uint _burn, uint _guild) public onlyOwner {
     // makes sure that we have enough players in the lottery
     // require(players.length >= 3, "Not enough players in the lottery");
 
     // selects the winner with the random number
     // _winner = playerEntry[random() % playerEntry.length];
-    uint _prize = (getTokenBalanceOf(address(this)) * 70) / 100;
-    uint _burn_token = (getTokenBalanceOf(address(this)) * 30) / 100;
+    uint _prize_token = (getTokenBalanceOf(address(this)) * _prize) / 100;
+    uint _burn_token = (getTokenBalanceOf(address(this)) * _burn) / 100;
+    uint _guild_token = (getTokenBalanceOf(address(this)) * _guild) / 100;
 
-    // transfers balance to winner => 70% of lottery pool
-    token.transfer(_winner, _prize);
+    // transfers balance to winner
+    token.transfer(_winner, _prize_token);
 
-    // burn the rest of the pool => 30% of lottery pool
+    // burn the rest of the pool
     token.transfer(owner, _burn_token);
+
+    // guild the rest of the pool
+    token.transfer(owner, _guild_token);
 
     // resets the players array once someone is picked
     resetLottery();

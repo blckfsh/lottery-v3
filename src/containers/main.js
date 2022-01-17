@@ -24,13 +24,18 @@ function Main() {
   const [tokenBalance, setTokenBalance] = useState('')
   const [lottery, setLottery] = useState('')
   const [lotteryAddress, setLotteryAddress] = useState('')
-  const [pool, setPool] = useState('')
   const [table, setTable] = useState([])
   const [tableError, setTableError] = useState(false)
   const [totalPlayers, setTotalPlayers] = useState(0)
   const [amount, setAmount] = useState('')
   const [gasFee, setGasFee] = useState(0)
   const [isAcceptingToken, setIsAcceptingToken] = useState(true)
+
+  // portion
+  const [prizePercentage, setPrizePercentage] = useState(70)
+  const [burnPercentage, setBurnPercentage] = useState(20)
+  const [guildPercentage, setGuildPercentage] = useState(10)
+  const [pool, setPool] = useState('')
 
   // roulette wheel
   const [segment, setSegment] = useState([])
@@ -118,17 +123,17 @@ function Main() {
 
       // Get Lottery Pool
       let lotteryPool = await lottery.methods.getTokenBalanceOf(lotteryData.address).call()
-      setPool(web3.utils.fromWei(lotteryPool, 'Ether'))
-      console.log(`pool: ${web3.utils.fromWei(lotteryPool, 'Ether')}`)
+      let computePrizePool = parseInt(lotteryPool) * parseInt(prizePercentage) / 100
+      setPool(web3.utils.fromWei(computePrizePool.toString(), 'Ether'))
+      console.log(`pool: ${web3.utils.fromWei(computePrizePool.toString(), 'Ether')}`)
 
+      // get owner address
       let lotteryOwner = await lottery.methods.owner().call()
       setOwner(lotteryOwner)
       console.log("owner: " + lotteryOwner)
 
       // Get Player Entry
       let playerEntry = await lottery.methods.getPlayerEntries().call()
-      // console.log("entry: " + playerEntry)
-
       if (playerEntry.length > 0) {
         for (let count = 0; count < playerEntry.length; count++) {
           segments.push({option: playerEntry[count]})
@@ -184,10 +189,10 @@ function Main() {
     let success = 'success'
 
     // setup id
-    let getTotalPlayes = await lottery.methods.getPlayers().call()
+    let getTotalPlayes = await lottery.methods.getAllPlayers().call()
     newValue = fixedValue + (parseInt(getTotalPlayes.length) + 1)
     id = addingPad(newValue, 7)
-    console.log("calling this one: " + account)
+    console.log("calling this one: " + id)
     // console.log(convertedAmount)
     // console.log(tokenBalance)
 
@@ -243,15 +248,18 @@ function Main() {
     const networkId = await web3.eth.net.getId()
     const lotteryData = Lottery.networks[networkId]
     const lottery = new web3.eth.Contract(Lottery.abi, lotteryData.address)
-
     const newPrizeNumber = Math.floor(Math.random() * segment.length)
 
+    // let prizePercent = web3.utils.fromWei(prizePercentage.toString(), 'Ether')
+    // let burnPercent = web3.utils.fromWei(burnPercentage.toString(), 'Ether')
+    // let guildPercent = web3.utils.fromWei(guildPercentage.toString(), 'Ether')
+
     if (pool > 0) {
-      await lottery.methods.pickWinner(segment[newPrizeNumber].option)
+      await lottery.methods.pickWinner(segment[newPrizeNumber].option, prizePercentage, burnPercentage, guildPercentage)
                         .estimateGas({ from: account })
                         .then(res => {
                           setWallet_Address(segment[newPrizeNumber].option)
-                          lottery.methods.pickWinner(segment[newPrizeNumber].option)
+                          lottery.methods.pickWinner(segment[newPrizeNumber].option, prizePercentage, burnPercentage, guildPercentage)
                                       .send({ from: account, gas: res.toString(), gasPrice: web3.utils.toHex(2 * 1e9), gasLimit: web3.utils.toHex(210000) })
                                       .on('transactionHash', (hash) => {
                                         console.log("prize picked: " + hash)
