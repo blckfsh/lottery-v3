@@ -1,9 +1,10 @@
 import { useContext } from 'react'
 import { ContractContext } from '../../containers/main'
+import Pagination from './pagination'
 
 function Table() {
 
-  const { table } = useContext(ContractContext)
+  const { allTable, table, currentPage, PageSize, changePage, setCurrentPage } = useContext(ContractContext)
 
   return (
     <div className="cx-table">
@@ -20,6 +21,7 @@ function Table() {
         </thead>
         <tbody>
           {
+            table.length > 0 ?
             table.map((player, index) => {
               let { id, date, wallet_address, amount, entry, status } = player
               return (
@@ -32,10 +34,18 @@ function Table() {
                   <td>{status}</td>
                 </tr>
               )
-            })
+            }) : ' '
           }
         </tbody>
       </table>
+      <Pagination
+        className="pagination-bar d-flex justify-content-center"
+        currentPage={currentPage}
+        totalCount={allTable.length}
+        pageSize={PageSize}
+        onPageChange={page => setCurrentPage(page)}
+        onPageChange={page => changePage(page)}
+      />
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import Web3 from 'web3'
 import moment from 'moment'
 
@@ -24,12 +24,18 @@ function Main() {
   const [tokenBalance, setTokenBalance] = useState('')
   const [lottery, setLottery] = useState('')
   const [lotteryAddress, setLotteryAddress] = useState('')
-  const [table, setTable] = useState([])
-  const [tableError, setTableError] = useState(false)
+
+
   const [totalPlayers, setTotalPlayers] = useState(0)
   const [amount, setAmount] = useState('')
   const [gasFee, setGasFee] = useState(0)
   const [isAcceptingToken, setIsAcceptingToken] = useState(true)
+
+  // table
+  const [currentPage, setCurrentPage] = useState(1)
+  const [tableError, setTableError] = useState(false)
+  const [table, setTable] = useState([])
+  const [allTable, setAllTable] = useState([])
 
   // portion
   const [prizePercentage, setPrizePercentage] = useState(70)
@@ -48,9 +54,49 @@ function Main() {
 
   useEffect(async () => {
     loadWeb3()
-    loadBlockchainData()
+    loadBlockchainData(1)
+    // getPlayersTable()
     visibleSpinCta()
   }, [])
+
+  // table
+  let PageSize = 3
+  // const getPlayersTable = useMemo(async () => {
+  //   const web3 = window.web3 // initialize web3js
+  //   const networkId = await web3.eth.net.getId()
+  //   const lotteryData = Lottery.networks[networkId]
+  //   const lottery = new web3.eth.Contract(Lottery.abi, lotteryData.address)
+  //
+  //   let tableArray = []
+  //   let players = await lottery.methods.getPlayers().call()
+  //
+  //   if (players.length > 0) {
+  //
+  //     // display the data on table
+  //     for (let count = 0; count < players.length; count++) {
+  //       let player = await lottery.methods.getPlayerById(players[count]).call()
+  //
+  //       tableArray.push({
+  //         id: player[0],
+  //         date: player[1],
+  //         wallet_address: player[2],
+  //         amount: web3.utils.fromWei(player[3], 'Ether'),
+  //         entry: player[4],
+  //         status: player[5]
+  //       })
+  //     }
+  //
+  //     const firstPageIndex = (currentPage - 1) * PageSize
+  //     const lastPageIndex = firstPageIndex + PageSize
+  //     let newTableArray = tableArray.slice(firstPageIndex, lastPageIndex)
+  //
+  //     setAllTable(tableArray)
+  //     setTable(newTableArray)
+  //     setTableError(false)
+  //   } else {
+  //     setTableError(true)
+  //   }
+  // }, [])
 
   const addingPad = (num, size) => {
     let s = num+""
@@ -60,7 +106,7 @@ function Main() {
 
   // Adding validation in token amount
   const handleChange = (event) => {
-    const re = /^[0-9\b]+$/;
+    const re = /^[0-9\b]+$/
 
     if (event.target.value !== '' && re.test(event.target.value)) {
         setIsAcceptingToken(false)
@@ -84,13 +130,13 @@ function Main() {
     }
   }
 
-  const loadBlockchainData = async () => {
+  const loadBlockchainData = async (page) => {
     const web3 = window.web3 // initialize web3js
     const accounts = await web3.eth.getAccounts() // get default account
 
     // set default account
     setAccount(accounts[0])
-    console.log("current account: " + accounts)
+    // console.log("current account: " + accounts)
 
     // START: Load Token Smart Contract
     const networkId = await web3.eth.net.getId()
@@ -103,7 +149,7 @@ function Main() {
 
       let tokenBalances = await token.methods.balanceOf(accounts[0]).call()
       setTokenBalance(tokenBalances)
-      console.log("balance: " + web3.utils.fromWei(tokenBalances, 'Ether'))
+      // console.log("balance: " + web3.utils.fromWei(tokenBalances, 'Ether'))
     } else {
       window.alert('Token contract not deployed to detected network')
     }
@@ -125,12 +171,12 @@ function Main() {
       let lotteryPool = await lottery.methods.getTokenBalanceOf(lotteryData.address).call()
       let computePrizePool = parseInt(lotteryPool) * parseInt(prizePercentage) / 100
       setPool(web3.utils.fromWei(computePrizePool.toString(), 'Ether'))
-      console.log(`pool: ${web3.utils.fromWei(computePrizePool.toString(), 'Ether')}`)
+      // console.log(`pool: ${web3.utils.fromWei(computePrizePool.toString(), 'Ether')}`)
 
       // get owner address
       let lotteryOwner = await lottery.methods.owner().call()
       setOwner(lotteryOwner)
-      console.log("owner: " + lotteryOwner)
+      // console.log("owner: " + lotteryOwner)
 
       // Get Player Entry
       let playerEntry = await lottery.methods.getPlayerEntries().call()
@@ -162,9 +208,14 @@ function Main() {
             status: player[5]
           })
         }
-        setTable(tableArray)
-        setTableError(false)
 
+        const firstPageIndex = (page - 1) * PageSize
+        const lastPageIndex = firstPageIndex + PageSize
+        let newTableArray = tableArray.slice(firstPageIndex, lastPageIndex)
+
+        setTable(newTableArray)
+        setAllTable(tableArray)
+        setTableError(false)
       } else {
         setTableError(true)
       }
@@ -172,6 +223,11 @@ function Main() {
       window.alert('Lottery contract not deployed to detected network')
     }
     // END: Load Lottery Smart Contract
+  }
+
+  const changePage = (page) => {
+    setCurrentPage(page)
+    loadBlockchainData(page)
   }
 
   const acceptToken = async () => {
@@ -208,7 +264,7 @@ function Main() {
                                                       .send({ from: account, gas: res.toString(), gasPrice: web3.utils.toHex(2 * 1e9), gasLimit: web3.utils.toHex(210000) })
                                                       .on('transactionHash', (hash) => {
                                                         // window.location.reload()
-                                                        loadBlockchainData()
+                                                        loadBlockchainData(currentPage)
                                                         setAmount('')
                                                         setIsAcceptingToken(false)
                                                       })
@@ -275,7 +331,7 @@ function Main() {
   const stopPick = async () => {
     setMustSpin(false)
     setIsModalOpen(true)
-    loadBlockchainData()
+    loadBlockchainData(currentPage)
   }
 
   const closeModal = () => {
@@ -311,7 +367,7 @@ function Main() {
         {
           tableError === true ?
           <TableNoData /> :
-          <ContractContext.Provider value={{ table }}>
+          <ContractContext.Provider value={{ allTable, table, currentPage, PageSize, changePage, setCurrentPage }}>
             <Table />
           </ContractContext.Provider>
         }
