@@ -3,7 +3,7 @@ import { ContractContext } from '../../containers/main'
 
 function Cta() {
 
-    const { amount, handleChange, acceptToken, isAcceptingToken } = useContext(ContractContext)
+    const { amount, handleChange, acceptToken, isAcceptingToken, generateQRCode } = useContext(ContractContext)
 
   return (
     <div className="d-grid gap-2">
@@ -13,7 +13,7 @@ function Cta() {
       </div>
       <hr className="mb-3 mt-3" />
       <button className="btn btn-primary btn-lg" disabled={isAcceptingToken} onClick={() => acceptToken()}>Pay Now</button>
-      <button className="btn btn-warning btn-lg" disabled={isAcceptingToken} onClick={() => console.log('Pay via QR Code')}>Pay via QR Code</button>
+      <button className="btn btn-warning btn-lg" disabled={isAcceptingToken} onClick={() => generateQRCode(amount)}>Pay via QR Code</button>
     </div>
   )
 }

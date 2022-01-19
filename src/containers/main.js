@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import Web3 from 'web3'
+import QRCode from 'qrcode'
 import moment from 'moment'
 
 import SampleToken from '../abis/SampleToken.json'
@@ -13,6 +14,7 @@ import Cta from '../components/main/cta'
 import Table from '../components/main/table'
 import TableNoData from '../components/main/table-nodata'
 import ModalComponent from '../components/main/modal'
+import PayQR from '../components/main/pay-qr'
 
 export const ContractContext = React.createContext()
 
@@ -52,6 +54,9 @@ function Main() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [wallet_address, setWallet_Address] = useState('')
 
+  // QRCode
+  const [qrImgUrl, setQrImgUrl] = useState('')
+
   useEffect(async () => {
     loadWeb3()
     loadBlockchainData(1)
@@ -61,42 +66,6 @@ function Main() {
 
   // table
   let PageSize = 3
-  // const getPlayersTable = useMemo(async () => {
-  //   const web3 = window.web3 // initialize web3js
-  //   const networkId = await web3.eth.net.getId()
-  //   const lotteryData = Lottery.networks[networkId]
-  //   const lottery = new web3.eth.Contract(Lottery.abi, lotteryData.address)
-  //
-  //   let tableArray = []
-  //   let players = await lottery.methods.getPlayers().call()
-  //
-  //   if (players.length > 0) {
-  //
-  //     // display the data on table
-  //     for (let count = 0; count < players.length; count++) {
-  //       let player = await lottery.methods.getPlayerById(players[count]).call()
-  //
-  //       tableArray.push({
-  //         id: player[0],
-  //         date: player[1],
-  //         wallet_address: player[2],
-  //         amount: web3.utils.fromWei(player[3], 'Ether'),
-  //         entry: player[4],
-  //         status: player[5]
-  //       })
-  //     }
-  //
-  //     const firstPageIndex = (currentPage - 1) * PageSize
-  //     const lastPageIndex = firstPageIndex + PageSize
-  //     let newTableArray = tableArray.slice(firstPageIndex, lastPageIndex)
-  //
-  //     setAllTable(tableArray)
-  //     setTable(newTableArray)
-  //     setTableError(false)
-  //   } else {
-  //     setTableError(true)
-  //   }
-  // }, [])
 
   const addingPad = (num, size) => {
     let s = num+""
@@ -306,10 +275,6 @@ function Main() {
     const lottery = new web3.eth.Contract(Lottery.abi, lotteryData.address)
     const newPrizeNumber = Math.floor(Math.random() * segment.length)
 
-    // let prizePercent = web3.utils.fromWei(prizePercentage.toString(), 'Ether')
-    // let burnPercent = web3.utils.fromWei(burnPercentage.toString(), 'Ether')
-    // let guildPercent = web3.utils.fromWei(guildPercentage.toString(), 'Ether')
-
     if (pool > 0) {
       await lottery.methods.pickWinner(segment[newPrizeNumber].option, prizePercentage, burnPercentage, guildPercentage)
                         .estimateGas({ from: account })
@@ -338,6 +303,19 @@ function Main() {
     setIsModalOpen(false)
   }
 
+  const generateQRCode = async (value) => {
+    try {
+      const response = await QRCode.toDataURL(value)
+
+      console.log(value)
+      setIsModalOpen(true)
+      setQrImgUrl(response)
+    } catch (error) {
+
+      console.log(error)
+    }
+  }
+
   return (
     <>
       <div className="cx-navbar d-flex justify-content-center align-items-center">
@@ -358,7 +336,7 @@ function Main() {
           </ContractContext.Provider>
         </div>
         <div className="cx-content cx-cta">
-          <ContractContext.Provider value={{ acceptToken, amount, handleChange, isAcceptingToken }}>
+          <ContractContext.Provider value={{ acceptToken, amount, handleChange, isAcceptingToken, generateQRCode }}>
             <Cta />
           </ContractContext.Provider>
         </div>
@@ -374,6 +352,9 @@ function Main() {
       </div>
       <ContractContext.Provider value={{ wallet_address, closeModal, isModalOpen }}>
         <ModalComponent />
+      </ContractContext.Provider>
+      <ContractContext.Provider value={{ qrImgUrl, closeModal, isModalOpen }}>
+        <PayQR />
       </ContractContext.Provider>
     </>
   )
