@@ -46,10 +46,10 @@ Custom Placeholders
 }
 
 .cx-wheel {
-  background: var(--dark-violet);
   height: 400px;
   width: 400px;
   border-radius: 100%;
+  z-index: 0;
 }
 
 /* ------------------------
@@ -89,6 +89,7 @@ Custom Styling
 }
 
 .cx-wheel-text {
+  margin-top: 80px;
   font-weight: 600;
 }
 
@@ -100,4 +101,37 @@ Custom Styling
 .cx-cta {
   margin-top: auto;
   margin-bottom: auto;
+  z-index: 2
+}
+
+.visible {
+  visibility: visible;
+}
+
+.not-visible {
+  visibility: hidden;
+}
+
+canvas {
+  width: 700px !important;
+}
+
+.bhdLno {
+  max-width: 405px !important;
+  z-index: -1 !important;
+}
+
+.cx-modal {
+  z-index: 999;
+}
+
+/* ------------------------
+Overwrites
+------------------------ */
+.modal-dialog {
+  margin: 0 !important;
+}
+
+.modal-content {
+  border: none !important;
 }

@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import Web3 from 'web3'
+import QRCode from 'qrcode'
 import moment from 'moment'
 
 import SampleToken from '../abis/SampleToken.json'
@@ -8,10 +9,12 @@ import Lottery from '../abis/Lottery.json'
 import NavBar from '../components/main/navbar'
 import Pool from '../components/main/pool'
 import Chart from '../components/main/chart'
-import Wheel from '../components/main/wheel'
+import WheelComponent from '../components/main/wheel'
 import Cta from '../components/main/cta'
 import Table from '../components/main/table'
 import TableNoData from '../components/main/table-nodata'
+import ModalComponent from '../components/main/modal'
+import PayQR from '../components/main/pay-qr'
 
 export const ContractContext = React.createContext()
 
@@ -23,18 +26,46 @@ function Main() {
   const [tokenBalance, setTokenBalance] = useState('')
   const [lottery, setLottery] = useState('')
   const [lotteryAddress, setLotteryAddress] = useState('')
-  const [pool, setPool] = useState('')
-  const [table, setTable] = useState([])
-  const [tableError, setTableError] = useState(false)
+
+
   const [totalPlayers, setTotalPlayers] = useState(0)
   const [amount, setAmount] = useState('')
   const [gasFee, setGasFee] = useState(0)
   const [isAcceptingToken, setIsAcceptingToken] = useState(true)
 
+  // table
+  const [currentPage, setCurrentPage] = useState(1)
+  const [tableError, setTableError] = useState(false)
+  const [table, setTable] = useState([])
+  const [allTable, setAllTable] = useState([])
+
+  // portion
+  const [prizePercentage, setPrizePercentage] = useState(70)
+  const [burnPercentage, setBurnPercentage] = useState(20)
+  const [guildPercentage, setGuildPercentage] = useState(10)
+  const [pool, setPool] = useState('')
+
+  // roulette wheel
+  const [segment, setSegment] = useState([])
+  const [mustSpin, setMustSpin] = useState(false)
+  const [isOwner, setIsOwner] = useState(false)
+
+  // modal
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [wallet_address, setWallet_Address] = useState('')
+
+  // QRCode
+  const [qrImgUrl, setQrImgUrl] = useState('')
+
   useEffect(async () => {
     loadWeb3()
-    loadBlockchainData()
+    loadBlockchainData(1)
+    // getPlayersTable()
+    visibleSpinCta()
   }, [])
+
+  // table
+  let PageSize = 3
 
   const addingPad = (num, size) => {
     let s = num+""
@@ -44,7 +75,7 @@ function Main() {
 
   // Adding validation in token amount
   const handleChange = (event) => {
-    const re = /^[0-9\b]+$/;
+    const re = /^[0-9\b]+$/
 
     if (event.target.value !== '' && re.test(event.target.value)) {
         setIsAcceptingToken(false)
@@ -68,13 +99,13 @@ function Main() {
     }
   }
 
-  const loadBlockchainData = async () => {
+  const loadBlockchainData = async (page) => {
     const web3 = window.web3 // initialize web3js
     const accounts = await web3.eth.getAccounts() // get default account
 
     // set default account
     setAccount(accounts[0])
-    console.log("current account: " + accounts)
+    // console.log("current account: " + accounts)
 
     // START: Load Token Smart Contract
     const networkId = await web3.eth.net.getId()
@@ -87,7 +118,7 @@ function Main() {
 
       let tokenBalances = await token.methods.balanceOf(accounts[0]).call()
       setTokenBalance(tokenBalances)
-      console.log("balance: " + web3.utils.fromWei(tokenBalances, 'Ether'))
+      // console.log("balance: " + web3.utils.fromWei(tokenBalances, 'Ether'))
     } else {
       window.alert('Token contract not deployed to detected network')
     }
@@ -97,6 +128,7 @@ function Main() {
     const tableArray = []
     const checkLastIdArray = []
     const playerAddress = []
+    const segments = []
     const lotteryData = Lottery.networks[networkId]
     setLotteryAddress(lotteryData.address)
 
@@ -106,19 +138,31 @@ function Main() {
 
       // Get Lottery Pool
       let lotteryPool = await lottery.methods.getTokenBalanceOf(lotteryData.address).call()
-      setPool(web3.utils.fromWei(lotteryPool, 'Ether'))
-      console.log(`pool: ${web3.utils.fromWei(lotteryPool, 'Ether')}`)
+      let computePrizePool = parseInt(lotteryPool) * parseInt(prizePercentage) / 100
+      setPool(web3.utils.fromWei(computePrizePool.toString(), 'Ether'))
+      // console.log(`pool: ${web3.utils.fromWei(computePrizePool.toString(), 'Ether')}`)
 
+      // get owner address
       let lotteryOwner = await lottery.methods.owner().call()
       setOwner(lotteryOwner)
-      console.log("owner: " + lotteryOwner)
-      // console.log(await lottery.methods)
+      // console.log("owner: " + lotteryOwner)
+
+      // Get Player Entry
+      let playerEntry = await lottery.methods.getPlayerEntries().call()
+      if (playerEntry.length > 0) {
+        for (let count = 0; count < playerEntry.length; count++) {
+          segments.push({option: playerEntry[count]})
+        }
+      } else if (playerEntry.length < 1) {
+        for (let count = 0; count < 4; count++) {
+            segments.push({option: '0x00000000000000000000000000000'})
+        }
+      }
+      setSegment(segments)
 
       // Get Players
       let players = await lottery.methods.getPlayers().call()
       if (players.length > 0) {
-
-        console.log(players)
 
         // display the data on table
         for (let count = 0; count < players.length; count++) {
@@ -133,10 +177,14 @@ function Main() {
             status: player[5]
           })
         }
-        console.log(tableArray)
-        setTable(tableArray)
-        setTableError(false)
 
+        const firstPageIndex = (page - 1) * PageSize
+        const lastPageIndex = firstPageIndex + PageSize
+        let newTableArray = tableArray.slice(firstPageIndex, lastPageIndex)
+
+        setTable(newTableArray)
+        setAllTable(tableArray)
+        setTableError(false)
       } else {
         setTableError(true)
       }
@@ -144,6 +192,11 @@ function Main() {
       window.alert('Lottery contract not deployed to detected network')
     }
     // END: Load Lottery Smart Contract
+  }
+
+  const changePage = (page) => {
+    setCurrentPage(page)
+    loadBlockchainData(page)
   }
 
   const acceptToken = async () => {
@@ -161,11 +214,12 @@ function Main() {
     let success = 'success'
 
     // setup id
-    let getTotalPlayes = await lottery.methods.getPlayers().call()
+    let getTotalPlayes = await lottery.methods.getAllPlayers().call()
     newValue = fixedValue + (parseInt(getTotalPlayes.length) + 1)
     id = addingPad(newValue, 7)
-    console.log(convertedAmount)
-    console.log(tokenBalance)
+    console.log("calling this one: " + id)
+    // console.log(convertedAmount)
+    // console.log(tokenBalance)
 
     if (amount > 0) {
       if (convertedAmount <= tokenBalance) {
@@ -178,7 +232,10 @@ function Main() {
                                           lottery.methods.acceptToken(id, date, convertedAmount.toString(), entry, success)
                                                       .send({ from: account, gas: res.toString(), gasPrice: web3.utils.toHex(2 * 1e9), gasLimit: web3.utils.toHex(210000) })
                                                       .on('transactionHash', (hash) => {
-                                                        window.location.reload()
+                                                        // window.location.reload()
+                                                        loadBlockchainData(currentPage)
+                                                        setAmount('')
+                                                        setIsAcceptingToken(false)
                                                       })
                                                       .catch(err => console.log(err.message))
                                         })
@@ -189,6 +246,73 @@ function Main() {
       }
     } else {
       window.alert('Bet atleast 1 slp.')
+    }
+  }
+
+  const visibleSpinCta = async () => {
+    const web3 = window.web3 // initialize web3js
+    const accounts = await web3.eth.getAccounts() // get default account
+
+    const networkId = await web3.eth.net.getId()
+    const lotteryData = Lottery.networks[networkId]
+    const lottery = new web3.eth.Contract(Lottery.abi, lotteryData.address)
+
+    let lotteryOwner = await lottery.methods.owner().call()
+
+    if (accounts[0] === lotteryOwner) {
+      setIsOwner(true)
+    } else {
+      setIsOwner(false)
+    }
+  }
+
+  const pickWinner = async () => {
+    setMustSpin(true)
+    const web3 = window.web3 // initialize web3js
+
+    const networkId = await web3.eth.net.getId()
+    const lotteryData = Lottery.networks[networkId]
+    const lottery = new web3.eth.Contract(Lottery.abi, lotteryData.address)
+    const newPrizeNumber = Math.floor(Math.random() * segment.length)
+
+    if (pool > 0) {
+      await lottery.methods.pickWinner(segment[newPrizeNumber].option, prizePercentage, burnPercentage, guildPercentage)
+                        .estimateGas({ from: account })
+                        .then(res => {
+                          setWallet_Address(segment[newPrizeNumber].option)
+                          lottery.methods.pickWinner(segment[newPrizeNumber].option, prizePercentage, burnPercentage, guildPercentage)
+                                      .send({ from: account, gas: res.toString(), gasPrice: web3.utils.toHex(2 * 1e9), gasLimit: web3.utils.toHex(210000) })
+                                      .on('transactionHash', (hash) => {
+                                        console.log("prize picked: " + hash)
+                                      })
+                                      .catch(error => console.error)
+                        })
+                        .catch(error => console.error)
+    } else {
+      // window.alert('No Prize Pool')
+    }
+  }
+
+  const stopPick = async () => {
+    setMustSpin(false)
+    setIsModalOpen(true)
+    loadBlockchainData(currentPage)
+  }
+
+  const closeModal = () => {
+    setIsModalOpen(false)
+  }
+
+  const generateQRCode = async (value) => {
+    try {
+      const response = await QRCode.toDataURL(value)
+
+      console.log(value)
+      setIsModalOpen(true)
+      setQrImgUrl(response)
+    } catch (error) {
+
+      console.log(error)
     }
   }
 
@@ -207,12 +331,12 @@ function Main() {
           <Chart />
         </div>
         <div className="cx-content d-flex flex-column justify-content-between align-items-center">
-          <ContractContext.Provider value={{ lotteryAddress }}>
-            <Wheel />
+          <ContractContext.Provider value={{ lotteryAddress, segment, mustSpin, stopPick, pool, isOwner, pickWinner, account }}>
+            <WheelComponent />
           </ContractContext.Provider>
         </div>
         <div className="cx-content cx-cta">
-          <ContractContext.Provider value={{ acceptToken, amount, handleChange, isAcceptingToken }}>
+          <ContractContext.Provider value={{ acceptToken, amount, handleChange, isAcceptingToken, generateQRCode }}>
             <Cta />
           </ContractContext.Provider>
         </div>
@@ -221,11 +345,17 @@ function Main() {
         {
           tableError === true ?
           <TableNoData /> :
-          <ContractContext.Provider value={{ table }}>
+          <ContractContext.Provider value={{ allTable, table, currentPage, PageSize, changePage, setCurrentPage }}>
             <Table />
           </ContractContext.Provider>
         }
       </div>
+      <ContractContext.Provider value={{ wallet_address, closeModal, isModalOpen }}>
+        <ModalComponent />
+      </ContractContext.Provider>
+      <ContractContext.Provider value={{ qrImgUrl, closeModal, isModalOpen }}>
+        <PayQR />
+      </ContractContext.Provider>
     </>
   )
 }

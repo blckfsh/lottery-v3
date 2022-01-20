@@ -26,7 +26,7 @@ contract('Lottery', ([deployer, investor]) => {
 			const name = await token.name()
       const symbol = await token.symbol()
 			assert.equal(name, 'SampleToken')
-      assert.equal(symbol, 'SMT')
+      assert.equal(symbol, 'SLP')
 		})
 	})
 
@@ -87,84 +87,16 @@ contract('Lottery', ([deployer, investor]) => {
 		it('Allows to fetch the players pool', async () => {
 			// Check if we are fetching the correct addresses
 			const event = result
-			assert.equal(event[0], accounts[1])
+			assert.equal(event[0], '1')
 		})
 	})
-
-  // describe('accept token from player 2', async () => {
-  //   let result
-	//
-  //   before(async () => {
-  //     // Investor must approve tokens before sending
-  //     await token.approve(lottery.address, '20', {from: accounts[2]})
-	//
-  //     // Transfer tokens from account address to lottery address
-  //     result = await lottery.acceptToken('20', {from: accounts[2]})
-  //   })
-	//
-  //   it('Allows players to bet token to lottery', async () => {
-  //     // Check Investor token balance after bet
-  //     let investorBalance = await token.balanceOf(accounts[2])
-  //     assert.equal(investorBalance.toString(), '0')
-	//
-  //     // Check Lottery balance after bet
-  //     let lotteryBalance
-  //     lotteryBalance = await token.balanceOf(lottery.address)
-  //     assert.equal(lotteryBalance.toString(), '40')
-  //     // lotteryBalance = await web3.eth.getBalance(lottery.address)
-  //     // assert.equal(lotteryBalance.toString(), '')
-	//
-  //     // Check logs to ensure event was emitted with correct data
-  //     const event = result.logs[0].args
-	// 		assert.equal(event._from, accounts[2])
-	// 		assert.equal(event._destAddr, lottery.address)
-  //     assert.equal(event._amount.toString(), '20')
-	//
-  //     // FAILURE: Investor can't bet more tokens than they have
-	// 		await lottery.acceptToken('21', { from: accounts[2] }).should.be.rejected;
-  //   })
-  // })
-	//
-  // describe('accept token from player 3', async () => {
-  //   let result
-	//
-  //   before(async () => {
-  //     // Investor must approve tokens before sending
-  //     await token.approve(lottery.address, '20', {from: accounts[3]})
-	//
-  //     // Transfer tokens from account address to lottery address
-  //     result = await lottery.acceptToken('20', {from: accounts[3]})
-  //   })
-	//
-  //   it('Allows players to bet token to lottery', async () => {
-  //     // Check Investor token balance after bet
-  //     let investorBalance = await token.balanceOf(accounts[3])
-  //     assert.equal(investorBalance.toString(), '0')
-	//
-  //     // Check Lottery balance after bet
-  //     let lotteryBalance
-  //     lotteryBalance = await token.balanceOf(lottery.address)
-  //     assert.equal(lotteryBalance.toString(), '60')
-  //     // lotteryBalance = await web3.eth.getBalance(lottery.address)
-  //     // assert.equal(lotteryBalance.toString(), '')
-	//
-  //     // Check logs to ensure event was emitted with correct data
-  //     const event = result.logs[0].args
-	// 		assert.equal(event._from, accounts[3])
-	// 		assert.equal(event._destAddr, lottery.address)
-  //     assert.equal(event._amount.toString(), '20')
-	//
-  //     // FAILURE: Investor can't bet more tokens than they have
-	// 		await lottery.acceptToken('21', { from: accounts[3] }).should.be.rejected;
-  //   })
-  // })
 
   describe('pick winner from player pool', async () => {
     let result
 
     before( async () => {
       // Choose a winner from the players pool (these are the accounts that participate on the lottery)
-      result = await lottery.pickWinner({from: deployer})
+      result = await lottery.pickWinner(accounts[1], '70', '20', '10', {from: deployer})
     })
 
     it('Allows owner to pick a winner from players pool', async () => {
